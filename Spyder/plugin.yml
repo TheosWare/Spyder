@@ -1,0 +1,30 @@
+name: Spyder
+version: 1.0
+description: hi.
+author: Theo
+main: com.spyder.main.Spyder
+depend: [Profiler]
+commands:
+   spy:
+      description: Spy on a player
+      usage: /<command> [player] <option>
+permissions:
+    spyder.*:
+        description: Gives access to all spyder commands
+        children:
+            spyder.help: true
+            spyder.clear: true
+            spyder.reset: true
+            spyder.lookup: true
+    spyder.help:
+        description: Gives access to get command help
+        default: op
+    spyder.clear:
+        description: Gives access to clear the cache
+        default: op
+    spyder.reset:
+        description: Gives access to reset a target
+        default: op
+    spyder.lookup:
+        description: Gives access to lookup a target
+        default: op
