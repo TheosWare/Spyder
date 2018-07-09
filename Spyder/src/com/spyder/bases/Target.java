@@ -1,8 +1,5 @@
 package com.spyder.bases;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -10,11 +7,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
-import org.bukkit.OfflinePlayer;
-
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.profiler.bases.Client;
 import com.profiler.bases.Profile;
 import com.spyder.main.Spyder;
@@ -27,22 +19,61 @@ public class Target {
 	private UUID owner;
 	public UUID getOwner() { return this.owner; }
 	
-	//Logged addresses
-	private List<Address> addresses = new ArrayList<Address>();
-	public List<Address> getIPs() { Collections.sort(this.addresses, new AddressSequenceComparator()); return this.addresses; }
+	//Logins
+	private List<Log> logs = new ArrayList<Log>();
+	
+	public List<Log> getLogins()
+	{
+		List<Log> res = new ArrayList<Log>();
+		for(Log l : this.logs)
+		{
+			if(l.getType() == 0)
+			{
+				res.add(l);
+			}
+		}
+		Collections.sort(res, new Sorter());
+		return res;
+	}
+	
+	public List<Log> getChats()
+	{
+		List<Log> res = new ArrayList<Log>();
+		for(Log l : this.logs)
+		{
+			if(l.getType() == 1)
+			{
+				res.add(l);
+			}
+		}
+		Collections.sort(res, new Sorter());
+		return res;
+	}
+	
+	public List<Log> getCommands()
+	{
+		List<Log> res = new ArrayList<Log>();
+		for(Log l : this.logs)
+		{
+			if(l.getType() == 2)
+			{
+				res.add(l);
+			}
+		}
+		Collections.sort(res, new Sorter());
+		return res;
+	}
+	
+	public void addLog(int type, Object key, Object value) {this.logs.add(new Log(type, key, value)); this.save();}
+	public void removeLog(Log address) { logs.remove(address); this.save(); }
 	
 	
-	public void addAddress(String address) { this.addAddress(address, System.currentTimeMillis());}
-	public void addAddress(String address, long time) {this.addAddress(new Address(address, time));}
-	public void addAddress(Address address) {this.addresses.add(address); this.save();}
-	
-	public void removeAddress(Address address) { addresses.remove(address); this.save(); }
 	
 	private Client pClient;
 	
-	public void resetAddresses()
+	public void resetLogs()
 	{
-		this.addresses.clear();
+		this.logs.clear();
 		this.save();
 	}
 	
@@ -58,13 +89,26 @@ public class Target {
 			p = this.pClient.addProfile(Spyder.getInstance());
 			HashMap<Object, Object> aData = new HashMap<Object, Object>();
 			p.setValue("Logins", aData);
+			p.setValue("Chats", aData);
+			p.setValue("Commands", aData);
 			pClient.save();
 		}
+		HashMap<Object, Object> tempData;
+		tempData = (HashMap<Object, Object>) p.getValue("Logins");
+		tempData.entrySet().forEach(entry -> {
+			this.logs.add(new Log(0, entry.getKey(),entry.getValue()));
+		});
 		
-		HashMap<Object, Object> aData = (HashMap<Object, Object>) p.getValue("Logins");
-		aData.entrySet().forEach(entry -> {
-			this.addresses.add(new Address(entry.getValue().toString(),Long.parseLong(entry.getKey().toString())));
-		});		
+		
+		tempData = (HashMap<Object, Object>) p.getValue("Chats");
+		tempData.entrySet().forEach(entry -> {
+			this.logs.add(new Log(1, entry.getKey(),entry.getValue()));
+		});
+		
+		tempData = (HashMap<Object, Object>) p.getValue("Commands");
+		tempData.entrySet().forEach(entry -> {
+			this.logs.add(new Log(2, entry.getKey(),entry.getValue()));
+		});
 	}
 	
 	public boolean exists()
@@ -76,21 +120,37 @@ public class Target {
 	{
 		Profile p = this.pClient.getProfile(Spyder.getInstance());
 		
-		HashMap<Object, Object> aData = new HashMap<Object, Object>();
-		for(Address a : this.addresses)
+		HashMap<Object, Object> logins = new HashMap<Object, Object>();
+		HashMap<Object, Object> chats = new HashMap<Object, Object>();
+		HashMap<Object, Object> commands = new HashMap<Object, Object>();
+
+		for(Log a : this.logs)
 		{
-			aData.put(a.getTime(), a.getAddress());
+			switch(a.getType())
+			{
+			case 0:
+				logins.put(a.getKey(), a.getValue());
+				break;
+			case 1:
+				chats.put(a.getKey(), a.getValue());
+				break;
+			case 2:
+				commands.put(a.getKey(), a.getValue());
+				break;
+			}
 		}
-		p.setValue("Logins", aData);
+		p.setValue("Logins", logins);
+		p.setValue("Chats", chats);
+		p.setValue("Commands", commands);
 		this.pClient.save();
 	}
 
 }
 
-class AddressSequenceComparator implements Comparator<Address> {
+class Sorter implements Comparator<Log> {
 
-	  public int compare(Address one, Address two) {
-	    return (int) (one.getTime() - two.getTime());
+	  public int compare(Log one, Log two) {
+	    return (int) (Long.parseLong(one.getValue().toString()) - Long.parseLong(two.getValue().toString()));
 	  }
 
 }

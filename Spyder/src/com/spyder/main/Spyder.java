@@ -11,7 +11,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.profiler.main.Profiler;
-import com.spyder.bases.Address;
+import com.spyder.bases.Log;
 import com.spyder.bases.Target;
 import com.spyder.managers.ConfigManager;
 import com.spyder.managers.EventManager;
@@ -121,7 +121,7 @@ public class Spyder extends JavaPlugin{
 							}
 							
 							Target t = this.getTargetManager().getTarget(op.getUniqueId());
-							t.resetAddresses();
+							//t.resetAddresses();
 							sender.sendMessage(this.PREFIX + "Player log reset.");
 						}
 						break;
@@ -169,7 +169,7 @@ public class Spyder extends JavaPlugin{
 							}
 
 							Target t = this.getTargetManager().getTarget(op.getUniqueId());
-							List<Address> logs = t.getIPs();
+							List<Log> logs = t.getLogins();
 							int p = (logs.size() + 5 - 1) / 5;
 							sender.sendMessage(this.PREFIX + ChatColor.translateAlternateColorCodes('&', "Showing page " + page + " of " + name + "! &8(" + p + " Total)"));
 
@@ -181,11 +181,11 @@ public class Spyder extends JavaPlugin{
 								int ni = i;
 								if(logs.size() - 1 >= ni)
 								{
-									Address a = logs.get(ni);
-									Date d = new Date(a.getTime());
+									Log a = logs.get(ni);
+									Date d = new Date(Long.parseLong(a.getKey().toString()));
 									SimpleDateFormat sdf = new SimpleDateFormat("dd MMM YYYY HH:mm a");
 									
-									sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&7[&8" + sdf.format(d) + "&7] &8> &7" + a.getAddress()));
+									sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&7[&8" + sdf.format(d) + "&7] &8> &7" + a.getValue()));
 									
 								}
 								
